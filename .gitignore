@@ -5,3 +5,4 @@ logs
 client.html
 /history/*
 config.json.v*
+[Vv]env/

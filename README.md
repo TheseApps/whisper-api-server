@@ -1,5 +1,19 @@
 # Whisper API Service
 
+
+Let's create a virtual environment for this Python application. I'll create a command to:
+Create a virtual environment
+Activate it
+Install the requirements
+  ```python -m venv venv```
+Activate the virtual environment:
+  On Windows: ```venv\Scripts\activate```
+  On Linux/Mac: ```source venv/bin/activate```
+Once activated, install the dependencies:
+  ```pip install -r requirements.txt```
+
+
+
 A local, OpenAI-compatible speech recognition API service using the Whisper model. This service provides a straightforward way to transcribe audio files in various formats with high accuracy and is designed to be compatible with the OpenAI Whisper API.
 
 ## Features
