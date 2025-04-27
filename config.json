@@ -1,7 +1,7 @@
 {
     "service_port": 5042,
-    "model_path": "/home/text-generation/models.whisper/antony-ties-podlodka-v1.2",
-    "language": "russian",
+    "model_path": "openai/whisper-medium",
+    "language": "english",
     "enable_history": true,
     "chunk_length_s": 28,
     "batch_size": 8,

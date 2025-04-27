@@ -11,6 +11,8 @@ Activate the virtual environment:
   On Linux/Mac: ```source venv/bin/activate```
 Once activated, install the dependencies:
   ```pip install -r requirements.txt```
+To Run:
+  ```python server.py```
 
 
 
