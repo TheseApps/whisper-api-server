@@ -49,9 +49,12 @@ class AudioProcessor:
                 if f'{audio_rate} Hz' in info:
                     logger.info(f"Файл {input_path} уже в формате WAV с частотой {audio_rate} Гц")
                     return input_path
-            except subprocess.CalledProcessError:
-                logger.warning(f"Не удалось получить информацию о WAV-файле {input_path}")
+            except subprocess.CalledProcessError as e:
+                logger.warning(f"Не удалось получить информацию о WAV-файле {input_path}: {e}")
                 # Продолжаем конвертацию, чтобы быть уверенными в формате
+            except FileNotFoundError:
+                logger.warning("Command 'soxi' not found. Make sure SOX is installed and in your PATH.")
+                # Continue conversion without checking sample rate
 
         # Создаем временный файл для WAV
         temp_dir = tempfile.mkdtemp()
@@ -75,8 +78,15 @@ class AudioProcessor:
             logger.info(f"Файл конвертирован в WAV: {output_path}")
             return output_path
         except subprocess.CalledProcessError as e:
-            logger.error(f"Ошибка при конвертации в WAV: {e.stderr.decode()}")
-            raise
+            error_msg = f"Ошибка при конвертации в WAV: {e}"
+            if e.stderr:
+                error_msg += f" - {e.stderr.decode('utf-8', errors='replace')}"
+            logger.error(error_msg)
+            raise RuntimeError(f"Failed to convert audio file: {error_msg}")
+        except FileNotFoundError:
+            error_msg = "Command 'ffmpeg' not found. Make sure ffmpeg is installed and in your PATH."
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
     
     def normalize_audio(self, input_path: str) -> str:
         """
@@ -108,8 +118,15 @@ class AudioProcessor:
             logger.info(f"Аудио нормализовано: {output_path}")
             return output_path
         except subprocess.CalledProcessError as e:
-            logger.error(f"Ошибка при нормализации аудио: {e.stderr.decode()}")
-            raise
+            error_msg = f"Ошибка при нормализации аудио: {e}"
+            if e.stderr:
+                error_msg += f" - {e.stderr.decode('utf-8', errors='replace')}"
+            logger.error(error_msg)
+            raise RuntimeError(f"Failed to normalize audio: {error_msg}")
+        except FileNotFoundError:
+            error_msg = "Command 'sox' not found. Make sure SOX is installed and in your PATH."
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
     
     def add_silence(self, input_path: str) -> str:
         """
@@ -140,8 +157,15 @@ class AudioProcessor:
             logger.info(f"Тишина добавлена: {output_path}")
             return output_path
         except subprocess.CalledProcessError as e:
-            logger.error(f"Ошибка при добавлении тишины: {e.stderr.decode()}")
-            raise
+            error_msg = f"Ошибка при добавлении тишины: {e}"
+            if e.stderr:
+                error_msg += f" - {e.stderr.decode('utf-8', errors='replace')}"
+            logger.error(error_msg)
+            raise RuntimeError(f"Failed to add silence to audio: {error_msg}")
+        except FileNotFoundError:
+            error_msg = "Command 'sox' not found. Make sure SOX is installed and in your PATH."
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
     
     def cleanup_temp_files(self, file_paths: list):
         """

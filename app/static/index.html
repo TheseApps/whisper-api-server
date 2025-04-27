@@ -361,7 +361,7 @@
                         <h3>Debug Information</h3>
                         <button id="toggle-debug" class="btn btn-small">Hide</button>
                     </div>
-                    <div class="debug-content" id="debug-info">
+                    <div class="debug-content" id="debug-info" style="display: block;">
                         <p>API requests and responses will appear here</p>
                     </div>
                 </div>
@@ -523,8 +523,16 @@
                     
                     if (!response.ok) {
                         return response.text().then(text => {
-                            addDebugInfo('Error Response', text);
-                            throw new Error(`Server responded with ${response.status}: ${text}`);
+                            try {
+                                // Try to parse error as JSON
+                                const jsonError = JSON.parse(text);
+                                addDebugInfo('Error Response', jsonError);
+                                throw new Error(`Server responded with ${response.status}: ${jsonError.error || text}`);
+                            } catch (e) {
+                                // If not valid JSON, use as text
+                                addDebugInfo('Error Response', text);
+                                throw new Error(`Server responded with ${response.status}: ${text}`);
+                            }
                         });
                     }
                     return response.json();

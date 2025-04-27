@@ -91,56 +91,73 @@ class TranscriptionService:
         # Сохраняем файл во временный файл
         temp_dir = tempfile.mkdtemp()
         temp_file_path = os.path.join(temp_dir, str(uuid.uuid4()) + "_" + os.path.basename(filename))
-        file.save(temp_file_path)
-
-        # Определяем длительность аудиофайла
-        duration = self.get_audio_duration(temp_file_path)
-
-        # Для файлов из внешних источников (URL, base64), закрываем их и выполняем очистку
-        if hasattr(source, 'cleanup'):
-            file.file.close()  # Закрываем файловый объект
-            source.cleanup()  # Очищаем временные файлы источника
-
+        
         try:
-            start_time = time.time()
-            result = self.transcriber.process_file(temp_file_path)
-            processing_time = time.time() - start_time
-
-            # Формируем ответ в зависимости от return_timestamps
-            if return_timestamps:
-                response = {
-                    "segments": result.get("segments", []),
-                    "text": result.get("text", ""),
-                    "processing_time": processing_time,
-                    "response_size_bytes": len(str(result).encode('utf-8')),
-                    "duration_seconds": duration,
-                    "model": os.path.basename(self.config["model_path"])
-                }
-            else:
-                # Если не запрашивались временные метки, result - это строка
-                response = {
-                    "text": result,
-                    "processing_time": processing_time,
-                    "response_size_bytes": len(str(result).encode('utf-8')),
-                    "duration_seconds": duration,
-                    "model": os.path.basename(self.config["model_path"])
-                }
-
-            # Журналирование результата
-            self.history.save(response, filename)
-
-            return response, 200
-
+            file.save(temp_file_path)
+            
+            # Определяем длительность аудиофайла
+            duration = self.get_audio_duration(temp_file_path)
+    
+            # Для файлов из внешних источников (URL, base64), закрываем их и выполняем очистку
+            if hasattr(source, 'cleanup'):
+                file.file.close()  # Закрываем файловый объект
+                source.cleanup()  # Очищаем временные файлы источника
+    
+            try:
+                start_time = time.time()
+                result = self.transcriber.process_file(temp_file_path)
+                processing_time = time.time() - start_time
+    
+                # Формируем ответ в зависимости от return_timestamps
+                if return_timestamps:
+                    response = {
+                        "segments": result.get("segments", []),
+                        "text": result.get("text", ""),
+                        "processing_time": processing_time,
+                        "response_size_bytes": len(str(result).encode('utf-8')),
+                        "duration_seconds": duration,
+                        "model": os.path.basename(self.config["model_path"])
+                    }
+                else:
+                    # Если не запрашивались временные метки, result - это строка
+                    response = {
+                        "text": result,
+                        "processing_time": processing_time,
+                        "response_size_bytes": len(str(result).encode('utf-8')),
+                        "duration_seconds": duration,
+                        "model": os.path.basename(self.config["model_path"])
+                    }
+    
+                # Журналирование результата
+                self.history.save(response, filename)
+    
+                return response, 200
+    
+            except Exception as e:
+                logger.error(f"Ошибка при транскрибации: {e}")
+                error_details = str(e)
+                # Include more details if subprocess error occurred
+                if hasattr(e, 'stderr') and e.stderr:
+                    error_details += f" - Subprocess error: {e.stderr.decode('utf-8', errors='replace')}"
+                return {"error": error_details, "details": f"Error processing audio file: {type(e).__name__}"}, 500
+    
         except Exception as e:
-            logger.error(f"Ошибка при транскрибации: {e}")
-            return {"error": str(e)}, 500
-
+            logger.error(f"Ошибка при сохранении или обработке файла: {e}")
+            return {"error": str(e), "details": f"Error saving or processing file: {type(e).__name__}"}, 500
+            
         finally:
             # Восстанавливаем оригинальное значение return_timestamps
             self.transcriber.return_timestamps = original_return_timestamps
 
             # Очистка временных файлов
             if os.path.exists(temp_file_path):
-                os.remove(temp_file_path)
+                try:
+                    os.remove(temp_file_path)
+                except Exception as e:
+                    logger.warning(f"Failed to remove temp file {temp_file_path}: {e}")
+                    
             if os.path.exists(temp_dir):
-                os.rmdir(temp_dir)
+                try:
+                    os.rmdir(temp_dir)
+                except Exception as e:
+                    logger.warning(f"Failed to remove temp directory {temp_dir}: {e}")
