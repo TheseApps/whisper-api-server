@@ -4,15 +4,10 @@
 Let's create a virtual environment for this Python application. I'll create a command to:
 Create a virtual environment
 Activate it
-Install the requirements
-  ```python -m venv venv```
-Activate the virtual environment:
-  On Windows: ```venv\Scripts\activate```
-  
-Once activated, install the dependencies:
-  ```pip install -r requirements.txt```
-To Run:
-  ```python server.py```
+Install the requirements ``` python -m venv venv ```
+Activate the virtual environment: ``` venv\Scripts\activate ```
+Once activated, install the dependencies: ``` pip install -r requirements.txt ```
+To Run: ``` python server.py ```
 
 pip install pydub
 

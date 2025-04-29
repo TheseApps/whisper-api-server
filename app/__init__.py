@@ -75,4 +75,4 @@ class WhisperServiceAPI:
         logger.info(f"Запуск сервиса на порту {self.port}")
         
         # Использовать waitress для production-ready сервера
-        waitress.serve(self.app, host='0.0.0.0', port=self.port)
+        waitress.serve(self.app, host='localhost', port=self.port)
